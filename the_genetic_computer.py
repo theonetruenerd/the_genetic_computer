@@ -1,5 +1,6 @@
 import re
 import random
+from venv import create
 
 START_CODON = "AAA"
 STOP_CODON = "TTT"
@@ -28,6 +29,9 @@ STORE_USER_ASCII_INPUT_CODON = "TCT"
 STORE_USER_CODON_INPUT_CODON = "TCC"
 ADD_NEXT_CODON_AND_STORE_CODON = "TAT"
 COMBINE_CODONS = "TAA"
+MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII = "TAC"
+LOAD_TAPE_CODON = "TAG"
+RETURN_CODON = "TCG"
 
 def create_tape(program):
     valid_tape = r'^[ACTG]+$'
@@ -100,14 +104,26 @@ def combine_codons(codon_one, codon_two):
 def read_tape(tape, debug_mode=False):
     current_cell = find_start_position_of_tape(tape)  # Locates first start codon in tape
     direction = 1  # Initially moving right
-    stored_codon = ""  # Initially empty memory
+    stored_codon = []  # Initially empty memory
+    tape_stack = [(tape, current_cell)]
     keep_going = True
     while keep_going:
+        tape, current_cell = tape_stack[-1]
         codon = tape[current_cell]
         if debug_mode:
             print(codon)
         if codon == STOP_CODON:
-            keep_going = False
+            if len(tape_stack) > 1:
+                tape_stack.pop()
+            else:
+                keep_going = False
+        elif codon == LOAD_TAPE_CODON:
+            new_tape = ''.join(stored_codon)
+            new_tape = create_tape(new_tape)
+            tape_stack.append((new_tape, find_start_position_of_tape(new_tape)))
+        elif codon == RETURN_CODON:
+            if len(tape_stack) > 1:
+                tape_stack.pop()
         elif codon == MOVE_LEFT_CODON:
             current_cell -= 1
         elif codon == MOVE_RIGHT_CODON:
@@ -121,11 +137,11 @@ def read_tape(tape, debug_mode=False):
             continue
         elif codon == STORE_NEXT_CODON:
             current_cell = move_head(current_cell, direction)
-            stored_codon = tape[current_cell]
+            stored_codon.append(tape[current_cell])
             continue
         elif codon == OVERWRITE_CODON:
             current_cell = move_head(current_cell, direction)
-            tape[current_cell] = stored_codon
+            tape[current_cell] = stored_codon.pop()
             continue
         elif codon == DELETE_CODON_CODON:
             current_cell = move_head(current_cell, direction)
@@ -144,16 +160,16 @@ def read_tape(tape, debug_mode=False):
             current_cell = move_head(current_cell, direction)
             tape[current_cell] = tape[current_cell][::-1]
         elif codon == PRINT_STORED_CODON:
-            print(stored_codon)
+            print(stored_codon[-1])
         elif codon == PRINT_STORED_CODON_AS_ASCII:
-            print(codon_to_ascii(stored_codon))
+            print(codon_to_ascii(stored_codon[-1]))
         elif codon == APPEND_STORED_CODON:
-            tape.append(stored_codon)
+            tape.append(stored_codon.pop())
         elif codon == MOVE_TO_STORED_CODON:
-            while tape[current_cell] != stored_codon:
+            while tape[current_cell] != stored_codon[-1]:
                 current_cell = move_head(current_cell, direction)
         elif codon == INSERT_CODON_CODON:
-            tape.insert(stored_codon, current_cell+direction)
+            tape.insert(stored_codon[-1], current_cell+direction)
         elif codon == PRINT_NEXT_CODON:
             current_cell = move_head(current_cell, direction)
             print(tape[current_cell])
@@ -161,16 +177,22 @@ def read_tape(tape, debug_mode=False):
             current_cell = move_head(current_cell, direction)
             print(codon_to_ascii(tape[current_cell]))
         elif codon == STORE_USER_CODON_INPUT_CODON:
-            stored_codon = input("")
+            stored_codon.append(input(""))
         elif codon == STORE_USER_ASCII_INPUT_CODON:
-            stored_codon = ascii_to_codon(input(""))
+            stored_codon.append(ascii_to_codon(input("")))
         elif codon == ADD_NEXT_CODON_AND_STORE_CODON:
             current_cell = move_head(current_cell, direction)
-            stored_codon = add_next_codon(stored_codon, tape[current_cell])
+            stored_codon.append(add_next_codon(stored_codon.pop(), tape[current_cell]))
             continue
         elif codon == COMBINE_CODONS:
             current_cell = move_head(current_cell, direction)
-            stored_codon = combine_codons(stored_codon, tape[current_cell])
+            stored_codon.append(combine_codons(stored_codon.pop(), tape[current_cell]))
+            continue
+        elif codon == MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII:
+            i = 0
+            while i < ord(codon_to_ascii(stored_codon.pop())):
+                current_cell = move_head(current_cell, direction)
+                i+=1
             continue
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
