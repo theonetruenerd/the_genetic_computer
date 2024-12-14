@@ -128,7 +128,7 @@ def read_tape(tape_list, debug_mode=False):
         elif codon == RETURN_CODON:
             tape, current_cell = tape_list[0]
         elif codon == START_NEW_TAPE_CODON:
-            tape, current_cell = tape_list[ord(codon_to_ascii(stored_codon.pop()))]
+            tape, current_cell = tape_list[int(codon_to_ascii(stored_codon.pop()))]
         elif codon == MOVE_LEFT_CODON:
             current_cell -= 1
         elif codon == MOVE_RIGHT_CODON:
