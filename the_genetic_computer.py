@@ -29,6 +29,9 @@ STORE_USER_CODON_INPUT_CODON = "TCC"
 ADD_NEXT_CODON_AND_STORE_CODON = "TAT"
 COMBINE_CODONS = "TAA"
 MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII = "TAC"
+LOAD_TAPE_CODON = "TAG"
+RETURN_CODON = "TCG"
+START_NEW_TAPE_CODON = "TGC"
 
 def create_tape(program):
     valid_tape = r'^[ACTG]+$'
@@ -98,29 +101,34 @@ def combine_codons(codon_one, codon_two):
     combined_value = value_one + value_two
     return ascii_to_codon(str(combined_value))
 
-def read_tape(tape, debug_mode=False):
-    current_cell = find_start_position_of_tape(tape)  # Locates first start codon in tape
+def initialise_tape_list(tapes):
+    tape_list = []
+    for tape in tapes:
+        tape_list.append((tape, find_start_position_of_tape(tape)))
+    return tape_list
+
+def read_tape(tape_list, debug_mode=False):
     direction = 1  # Initially moving right
     stored_codon = []  # Initially empty memory
-    # tape_stack = [(tape, current_cell)]
+    tape, current_cell = tape_list[0]
     keep_going = True
     while keep_going:
-        # tape, current_cell = tape_stack[-1]
         codon = tape[current_cell]
         if debug_mode:
             print(codon)
         if codon == STOP_CODON:
-            # if len(tape_stack) > 1:
-            #     tape_stack.pop()
-            # else:
+            if len(tape_list) > 1:
+                 tape, current_cell = tape_list[0]
+            else:
                 keep_going = False
-        # elif codon == LOAD_TAPE_CODON:
-        #     new_tape = ''.join(stored_codon)
-        #     new_tape = create_tape(new_tape)
-        #     tape_stack.append((new_tape, find_start_position_of_tape(new_tape)))
-        # elif codon == RETURN_CODON:
-        #     if len(tape_stack) > 1:
-        #         tape_stack.pop()
+        elif codon == LOAD_TAPE_CODON:
+            new_tape = ''.join(stored_codon)
+            new_tape = create_tape(new_tape)
+            tape_list.append((new_tape, find_start_position_of_tape(new_tape)))
+        elif codon == RETURN_CODON:
+            tape, current_cell = tape_list[0]
+        elif codon == START_NEW_TAPE_CODON:
+            tape, current_cell = tape_list[ord(codon_to_ascii(stored_codon.pop()))]
         elif codon == MOVE_LEFT_CODON:
             current_cell -= 1
         elif codon == MOVE_RIGHT_CODON:
@@ -194,3 +202,9 @@ def read_tape(tape, debug_mode=False):
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             current_cell = move_head(current_cell, -direction)
+
+## MULTIPLE TAPE PLANS:
+# [(tape, current_cell)] --> tape list
+# interpreter is first one in
+# interpreter can shift to any program in the list by using the ascii value of the last stored codon, and then can be returned to?
+# Programs can be loaded into the list by having all codons in the stored codon list merged?
