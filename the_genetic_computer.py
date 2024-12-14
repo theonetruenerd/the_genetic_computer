@@ -20,6 +20,8 @@ TOGGLE_DIRECTION_CODON = "AGG"
 REVERSE_CODON = "CTA"
 PRINT_STORED_CODON = "CCC"
 PRINT_STORED_CODON_AS_ASCII = "CAT"
+PRINT_NEXT_CODON = "CGA"
+PRINT_NEXT_CODON_AS_ASCII = "CGG"
 APPEND_STORED_CODON = "TGA"
 MOVE_TO_STORED_CODON = "TCA"
 
@@ -66,6 +68,15 @@ def codon_to_ascii(codon):
     index += 32
 
     return chr(index)
+
+def ascii_to_codon(ascii_to_convert):
+    index_to_base = ['A','C','T','G']
+    index = ord(ascii_to_convert) - 32
+    codon = ""
+    for _ in range(3):
+        codon = index_to_base[index%4] + codon
+        index //= 4
+    return codon
 
 def read_tape(tape, debug_mode=False):
     current_cell = find_start_position_of_tape(tape)  # Locates first start codon in tape
@@ -124,4 +135,12 @@ def read_tape(tape, debug_mode=False):
                 current_cell = move_head(current_cell, direction)
         elif codon == INSERT_CODON_CODON:
             tape.insert(stored_codon, current_cell+direction)
+        elif codon == PRINT_NEXT_CODON:
+            current_cell = move_head(current_cell, direction)
+            print(tape[current_cell])
+        elif codon == PRINT_NEXT_CODON_AS_ASCII:
+            current_cell = move_head(current_cell, direction)
+            print(codon_to_ascii(tape[current_cell]))
         current_cell = move_head(current_cell, direction)
+        if current_cell < 0 or current_cell >= len(tape):
+            current_cell = move_head(current_cell, -direction)
