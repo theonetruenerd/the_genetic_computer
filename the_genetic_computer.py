@@ -27,6 +27,7 @@ MOVE_TO_STORED_CODON = "TCA"
 STORE_USER_ASCII_INPUT_CODON = "TCT"
 STORE_USER_CODON_INPUT_CODON = "TCC"
 ADD_NEXT_CODON_AND_STORE_CODON = "TAT"
+COMBINE_CODONS = "TAA"
 
 def create_tape(program):
     valid_tape = r'^[ACTG]+$'
@@ -89,6 +90,12 @@ def add_next_codon(current_codon,codon_to_add):
     new_value += 96
     print(new_value)
     return ascii_to_codon(str(new_value))
+
+def combine_codons(codon_one, codon_two):
+    value_one = int(codon_to_ascii(codon_one))
+    value_two = int(codon_to_ascii(codon_two))
+    combined_value = value_one + value_two
+    return ascii_to_codon(str(combined_value))
 
 def read_tape(tape, debug_mode=False):
     current_cell = find_start_position_of_tape(tape)  # Locates first start codon in tape
@@ -160,7 +167,11 @@ def read_tape(tape, debug_mode=False):
         elif codon == ADD_NEXT_CODON_AND_STORE_CODON:
             current_cell = move_head(current_cell, direction)
             stored_codon = add_next_codon(stored_codon, tape[current_cell])
-            current_cell = move_head(current_cell, -direction)
+            continue
+        elif codon == COMBINE_CODONS:
+            current_cell = move_head(current_cell, direction)
+            stored_codon = combine_codons(stored_codon, tape[current_cell])
+            continue
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             current_cell = move_head(current_cell, -direction)
