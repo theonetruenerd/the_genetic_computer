@@ -1,7 +1,7 @@
 import the_genetic_computer
 
 program = """AAACGGTTACGGTCCCGGTGACGGTGACGGTGGCGGAGACGGAAACGGGCGCGGTGGCGGGATCGGTGACGGTCATTT"""
-program_two = "AAAATAAATTGCTTT"
+program_two = "AAATCCTGCTTT"
 
 tape = the_genetic_computer.create_tape(program)
 tape_2 = the_genetic_computer.create_tape(program_two)
