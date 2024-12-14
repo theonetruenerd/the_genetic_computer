@@ -117,16 +117,14 @@ def read_tape(tape_list, debug_mode=False):
         if debug_mode:
             print(codon)
         if codon == STOP_CODON:
-            if len(tape_list) > 1:
-                 tape, current_cell = tape_list[0]
-            else:
-                keep_going = False
+            keep_going = False
         elif codon == LOAD_TAPE_CODON:
             new_tape = ''.join(stored_codon)
             new_tape = create_tape(new_tape)
             tape_list.append((new_tape, find_start_position_of_tape(new_tape)))
         elif codon == RETURN_CODON:
             tape, current_cell = tape_list[0]
+            current_cell = move_head(current_cell, direction)
         elif codon == START_NEW_TAPE_CODON:
             tape, current_cell = tape_list[int(codon_to_ascii(stored_codon.pop()))]
         elif codon == MOVE_LEFT_CODON:
@@ -202,9 +200,3 @@ def read_tape(tape_list, debug_mode=False):
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             current_cell = move_head(current_cell, -direction)
-
-## MULTIPLE TAPE PLANS:
-# [(tape, current_cell)] --> tape list
-# interpreter is first one in
-# interpreter can shift to any program in the list by using the ascii value of the last stored codon, and then can be returned to?
-# Programs can be loaded into the list by having all codons in the stored codon list merged?
