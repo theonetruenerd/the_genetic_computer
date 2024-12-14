@@ -1,6 +1,5 @@
 import re
 import random
-from venv import create
 
 START_CODON = "AAA"
 STOP_CODON = "TTT"
@@ -30,8 +29,6 @@ STORE_USER_CODON_INPUT_CODON = "TCC"
 ADD_NEXT_CODON_AND_STORE_CODON = "TAT"
 COMBINE_CODONS = "TAA"
 MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII = "TAC"
-LOAD_TAPE_CODON = "TAG"
-RETURN_CODON = "TCG"
 
 def create_tape(program):
     valid_tape = r'^[ACTG]+$'
@@ -105,25 +102,25 @@ def read_tape(tape, debug_mode=False):
     current_cell = find_start_position_of_tape(tape)  # Locates first start codon in tape
     direction = 1  # Initially moving right
     stored_codon = []  # Initially empty memory
-    tape_stack = [(tape, current_cell)]
+    # tape_stack = [(tape, current_cell)]
     keep_going = True
     while keep_going:
-        tape, current_cell = tape_stack[-1]
+        # tape, current_cell = tape_stack[-1]
         codon = tape[current_cell]
         if debug_mode:
             print(codon)
         if codon == STOP_CODON:
-            if len(tape_stack) > 1:
-                tape_stack.pop()
-            else:
+            # if len(tape_stack) > 1:
+            #     tape_stack.pop()
+            # else:
                 keep_going = False
-        elif codon == LOAD_TAPE_CODON:
-            new_tape = ''.join(stored_codon)
-            new_tape = create_tape(new_tape)
-            tape_stack.append((new_tape, find_start_position_of_tape(new_tape)))
-        elif codon == RETURN_CODON:
-            if len(tape_stack) > 1:
-                tape_stack.pop()
+        # elif codon == LOAD_TAPE_CODON:
+        #     new_tape = ''.join(stored_codon)
+        #     new_tape = create_tape(new_tape)
+        #     tape_stack.append((new_tape, find_start_position_of_tape(new_tape)))
+        # elif codon == RETURN_CODON:
+        #     if len(tape_stack) > 1:
+        #         tape_stack.pop()
         elif codon == MOVE_LEFT_CODON:
             current_cell -= 1
         elif codon == MOVE_RIGHT_CODON:
