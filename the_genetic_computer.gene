@@ -1,0 +1,27 @@
+AAA  # Begins tape
+TGG  # Gets first item of program
+TCA  # Jumps to first occurrence in interpreter of that item
+
+AAA  # If AAA
+GAG  # Remove last stored codon
+GGG  # Go to start of tape
+
+CGG  # If CGG
+GAG  # Remove last stored codon
+TGG  # Get the next item of program
+ATG  # Print it
+GAG  # Remove last stored codon
+GGG  # Go to start of tape
+
+ATA  # If ATA
+GAG  # Remove last stored codon
+TGG  # Get the next item of program
+GGG  # Go back to start
+
+TCT  # If TCT
+GAG  # Remove last stored codon
+TCT  # Store ASCII user input
+GGG  # Go back to start of program
+
+TTT  # If TTT
+TTT  # End tape
