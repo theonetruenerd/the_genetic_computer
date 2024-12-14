@@ -19,17 +19,19 @@ CHANGE_DIRECTION_TO_RIGHT_CODON = "AGT"
 TOGGLE_DIRECTION_CODON = "AGG"
 REVERSE_CODON = "CTA"
 PRINT_STORED_CODON = "CCC"
-PRINT_STORED_CODON_AS_ASCII = "CAT"
+PRINT_STORED_CODON_AS_ASCII = "ATG"
 PRINT_NEXT_CODON = "CGA"
 PRINT_NEXT_CODON_AS_ASCII = "CGG"
 APPEND_STORED_CODON = "TGA"
 MOVE_TO_STORED_CODON = "TCA"
+STORE_USER_ASCII_INPUT_CODON = "TCT"
+STORE_USER_CODON_INPUT_CODON = "TCC"
+ADD_NEXT_CODON_AND_STORE_CODON = "TAT"
 
 def create_tape(program):
     valid_tape = r'^[ACTG]+$'
     program = re.sub(r"[\n\t\s]*", "",program)
     program = program.upper()
-    print(program)
     if re.fullmatch(valid_tape, program):
         tape = [program[i:i+3] for i in range(0, len(program), 3)]
         if len(tape[-1]) != 3:
@@ -77,6 +79,16 @@ def ascii_to_codon(ascii_to_convert):
         codon = index_to_base[index%4] + codon
         index //= 4
     return codon
+
+def add_next_codon(current_codon,codon_to_add):
+    value = int(codon_to_ascii(current_codon))
+    value_being_added_to = int(codon_to_ascii(codon_to_add))
+    value -= 48
+    value_being_added_to -= 48
+    new_value = value + value_being_added_to
+    new_value += 96
+    print(new_value)
+    return ascii_to_codon(str(new_value))
 
 def read_tape(tape, debug_mode=False):
     current_cell = find_start_position_of_tape(tape)  # Locates first start codon in tape
@@ -141,6 +153,14 @@ def read_tape(tape, debug_mode=False):
         elif codon == PRINT_NEXT_CODON_AS_ASCII:
             current_cell = move_head(current_cell, direction)
             print(codon_to_ascii(tape[current_cell]))
+        elif codon == STORE_USER_CODON_INPUT_CODON:
+            stored_codon = input("")
+        elif codon == STORE_USER_ASCII_INPUT_CODON:
+            stored_codon = ascii_to_codon(input(""))
+        elif codon == ADD_NEXT_CODON_AND_STORE_CODON:
+            current_cell = move_head(current_cell, direction)
+            stored_codon = add_next_codon(stored_codon, tape[current_cell])
+            current_cell = move_head(current_cell, -direction)
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             current_cell = move_head(current_cell, -direction)
