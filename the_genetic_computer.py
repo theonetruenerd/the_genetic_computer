@@ -275,7 +275,7 @@ def read_tape(tape_list, debug_mode=False):
             continue
         elif codon == JUMP_TO_BEGINNING_CODON:
             logging.debug("Jump to beginning Codon encountered")
-            current_cell=tape[0]
+            current_cell=0
             codon = tape[current_cell]
             continue
         current_cell = move_head(current_cell, direction)
