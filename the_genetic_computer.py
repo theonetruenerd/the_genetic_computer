@@ -36,6 +36,9 @@ START_NEW_TAPE_CODON = "TGC"
 STORE_POSITION_IN_NEXT_TAPE_CODON = "TGG"
 RETURN_TO_START_CODON = "GGG"
 REMOVE_LAST_STORED_CODON = "GAG"
+IF_CODON = "GCG"
+JUMP_TO_END_CODON = "GTG"
+JUMP_TO_BEGINNING_CODON = "CCG"
 
 def create_tape(program):
     valid_tape = r'^[ACTG]+$'
@@ -120,8 +123,8 @@ def read_tape(tape_list, debug_mode=False):
     stored_codon = []  # Initially empty memory
     tape, current_cell = tape_list[0]
     keep_going = True
+    codon = tape[current_cell]
     while keep_going:
-        codon = tape[current_cell]
         if codon == STOP_CODON:
             logging.debug("Stop Codon encountered")
             keep_going = False
@@ -146,22 +149,26 @@ def read_tape(tape_list, debug_mode=False):
             current_cell += 1
         elif codon == STAY_IN_PLACE_CODON:
             logging.debug("Stay In Place Codon encountered")
+            codon = tape[current_cell]
             continue
         elif codon == COMPLEMENT_CODON:
             logging.debug("Complement Codon encountered")
             current_cell = move_head(current_cell, direction)
             new_codon = invert_codon(tape[current_cell])
             tape[current_cell] = new_codon
+            codon = tape[current_cell]
             continue
         elif codon == STORE_NEXT_CODON:
             logging.debug("Store next Codon encountered")
             current_cell = move_head(current_cell, direction)
             stored_codon.append(tape[current_cell])
+            codon = tape[current_cell]
             continue
         elif codon == OVERWRITE_CODON:
             logging.debug("Overwrite Codon encountered")
             current_cell = move_head(current_cell, direction)
             tape[current_cell] = stored_codon.pop()
+            codon = tape[current_cell]
             continue
         elif codon == DELETE_CODON_CODON:
             logging.debug("Delete Codon Codon Encountered")
@@ -171,6 +178,7 @@ def read_tape(tape_list, debug_mode=False):
             logging.debug("Shuffle bases Codon encountered")
             current_cell = move_head(current_cell, direction)
             tape[current_cell] = shuffle_codon(tape[current_cell])
+            codon = tape[current_cell]
             continue
         elif codon == CHANGE_DIRECTION_TO_LEFT_CODON:
             logging.DEBUG("Change direction to left codon encountered")
@@ -220,11 +228,13 @@ def read_tape(tape_list, debug_mode=False):
             logging.debug("Add Next Codon and Store Codon encountered")
             current_cell = move_head(current_cell, direction)
             stored_codon.append(add_next_codon(stored_codon.pop(), tape[current_cell]))
+            codon = tape[current_cell]
             continue
         elif codon == COMBINE_CODONS:
             logging.debug("Combine Codon encountered")
             current_cell = move_head(current_cell, direction)
             stored_codon.append(combine_codons(stored_codon.pop(), tape[current_cell]))
+            codon = tape[current_cell]
             continue
         elif codon == MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII:
             logging.debug("Move Equal to last stored Codon encountered")
@@ -232,6 +242,7 @@ def read_tape(tape_list, debug_mode=False):
             while i < ord(codon_to_ascii(stored_codon.pop())):
                 current_cell = move_head(current_cell, direction)
                 i+=1
+            codon = tape[current_cell]
             continue
         elif codon == STORE_POSITION_IN_NEXT_TAPE_CODON:
             logging.debug("Store position in Next Tape Codon encountered")
@@ -247,10 +258,28 @@ def read_tape(tape_list, debug_mode=False):
         elif codon == RETURN_TO_START_CODON:
             logging.debug("Return to start Codon encountered")
             current_cell = find_start_position_of_tape(tape)
+            codon = tape[current_cell]
+            continue
         elif codon == REMOVE_LAST_STORED_CODON:
             logging.debug("Remove last stored Codon encountered")
             stored_codon.pop()
+        elif codon == IF_CODON:
+            logging.debug("If Codon encountered")
+            if stored_codon.pop() == tape[current_cell]:
+                codon = stored_codon.pop()
+                continue
+        elif codon == JUMP_TO_END_CODON:
+            logging.debug("Jump to end Codon encountered")
+            current_cell=tape[-1]
+            codon = tape[current_cell]
+            continue
+        elif codon == JUMP_TO_BEGINNING_CODON:
+            logging.debug("Jump to beginning Codon encountered")
+            current_cell=tape[0]
+            codon = tape[current_cell]
+            continue
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
             current_cell = move_head(current_cell, -direction)
+        codon = tape[current_cell]
