@@ -22,26 +22,26 @@ COMBINE_CODONS = "TAA"
 ADD_NEXT_CODON_AND_STORE_CODON = "TAT"
 MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII = "TAC"
 LOAD_TAPE_CODON = "TAG"
-# NOT_DEFINED = "TTA"
-# NOT_DEFINED = "TTC"
+CLEAR_MEMORY_CODON = "TTA"
+IGNORE_THIS_CODON = "TTC"
 STOP_CODON = "TTT"
-# NOT_DEFINED = "TTG"
+GENERATE_RANDOM_CODON_AND_STORE_IT = "TTG"
 MOVE_TO_STORED_CODON = "TCA"
 STORE_USER_ASCII_INPUT_CODON = "TCT"
 STORE_USER_CODON_INPUT_CODON = "TCC"
 RETURN_CODON = "TCG"
 APPEND_STORED_CODON = "TGA"
-# NOT_DEFINED = "TGT"
+SHUFFLE_TAPE_CODON = "TGT"
 START_NEW_TAPE_CODON = "TGC"
 STORE_POSITION_IN_NEXT_TAPE_CODON = "TGG"
-# NOT_DEFINED = "CAA"
-# NOT_DEFINED = "CAT"
-# NOT_DEFINED = "CAC"
-# NOT_DEFINED = "CAG"
+PRINT_TAPE_CODON = "CAA"
+SWAP_STORED_AND_TAPE_CODON = "CAT"
+LOOP_START_CODON = "CAC"
+LOOP_END_CODON = "CAG"
 REVERSE_CODON = "CTA"
-# NOT_DEFINED = "CTT"
-# NOT_DEFINED = "CTC"
-# NOT_DEFINED = "CTG"
+PRINT_MEMORY_CODON = "CTT"
+PRINT_MEMORY_AS_ASCII_CODON = "CTC"
+TAPE_MEIOSIS_CODON = "CTG"
 # NOT_DEFINED = "CCA"
 # NOT_DEFINED = "CCT"
 PRINT_STORED_CODON = "CCC"
@@ -77,6 +77,15 @@ def create_tape(program):
         return tape
     else:
         raise ValueError("Invalid tape format")
+
+def random_codon():
+    i = 0
+    generated_codon = ""
+    base = ['A', 'C', 'G', 'T']
+    while i < 3:
+        ind = random.randint(0,3)
+        generated_codon += base[ind]
+    return generated_codon
 
 def find_start_position_of_tape(tape):
     for index, value in enumerate(tape):
@@ -272,14 +281,14 @@ def read_tape(tape_list, debug_mode=False):
             continue
         elif codon == STORE_POSITION_IN_NEXT_TAPE_CODON:
             logging.debug("Store position in Next Tape Codon encountered")
-            tape_list[0] = (tape, current_cell)
-            tape, current_cell = tape_list[1]
+            original_tape_index = tape_list.index((tape, current_cell))
+            tape, current_cell = tape_list[original_tape_index + 1]
             current_cell = move_head(current_cell, direction)
-            tape_list[1] = (tape, current_cell)
+            tape_list[original_tape_index+1] = (tape, current_cell)
             logging.debug(f"{tape[current_cell]}, {current_cell}")
             stored_codon.append(tape[current_cell])
             logging.debug(stored_codon)
-            tape, current_cell = tape_list[0]
+            tape, current_cell = tape_list[original_tape_index]
             logging.debug(f"{tape}, {current_cell}")
         elif codon == RETURN_TO_START_CODON:
             logging.debug("Return to start Codon encountered")
@@ -304,6 +313,48 @@ def read_tape(tape_list, debug_mode=False):
             current_cell=0
             codon = tape[current_cell]
             continue
+        elif codon == CLEAR_MEMORY_CODON:
+            logging.debug("Clear Memory Codon encountered")
+            stored_codon = []
+        elif codon == IGNORE_THIS_CODON:
+            logging.debug("Ignore this Codon encountered")
+        elif codon == GENERATE_RANDOM_CODON_AND_STORE_IT:
+            logging.debug("Generate Random Codon Encountered")
+            stored_codon.append(random_codon())
+        elif codon == SHUFFLE_TAPE_CODON:
+            logging.debug("Shuffle Tape Codon encountered")
+            tape = tape.shuffle()
+        elif codon == PRINT_TAPE_CODON:
+            logging.debug("Print Tape Codon encountered")
+            print(tape)
+        elif codon == SWAP_STORED_AND_TAPE_CODON:
+            logging.debug("Swap Tape Codon encountered")
+            current_cell = move_head(current_cell, direction)
+            temp_store = tape[current_cell]
+            tape[current_cell] = stored_codon.pop()
+            stored_codon.append(temp_store)
+        elif codon == LOOP_START_CODON:
+            logging.debug("Loop Start Codon encountered")
+        elif codon == LOOP_END_CODON:
+            logging.debug("Loop End Codon encountered")
+            if stored_codon[-1] != "CAA":
+                direction *= -1
+                while tape[current_cell] != LOOP_START_CODON:
+                    current_cell = move_head(current_cell, direction)
+                direction *= -1
+        elif codon == PRINT_MEMORY_CODON:
+            logging.debug("Print Memory Codon encountered")
+            print(stored_codon)
+        elif codon == PRINT_MEMORY_AS_ASCII_CODON:
+            for item in stored_codon:
+                print(codon_to_ascii(item))
+        elif codon == TAPE_MEIOSIS_CODON:
+            logging.debug("Tape Meiosis Codon encountered")
+            (upper_tape, upper_tape_current_cell) = tape_list[tape_list.index((tape, current_cell))+1]
+            for item in upper_tape:
+                if tape[upper_tape.index(item)]:
+                    if random.randint(0,1)==1:
+                        tape[upper_tape.index(item)] = item
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
