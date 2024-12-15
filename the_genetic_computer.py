@@ -323,7 +323,7 @@ def read_tape(tape_list, debug_mode=False):
             stored_codon.append(random_codon())
         elif codon == SHUFFLE_TAPE_CODON:
             logging.debug("Shuffle Tape Codon encountered")
-            tape = tape.shuffle()
+            tape = random.shuffle(tape)
         elif codon == PRINT_TAPE_CODON:
             logging.debug("Print Tape Codon encountered")
             print(tape)
