@@ -1,6 +1,7 @@
 import re
 import random
 import logging
+from pathlib import Path
 
 START_CODON = "AAA"
 MOVE_LEFT_CODON = "AAT"
@@ -42,12 +43,12 @@ REVERSE_CODON = "CTA"
 PRINT_MEMORY_CODON = "CTT"
 PRINT_MEMORY_AS_ASCII_CODON = "CTC"
 TAPE_MEIOSIS_CODON = "CTG"
-# NOT_DEFINED = "CCA"
-# NOT_DEFINED = "CCT"
+REVERSE_ORDER_OF_MEMORY_CODON = "CCA"
+READ_FILE_INTO_TAPE_CODON = "CCT"
 PRINT_STORED_CODON = "CCC"
 JUMP_TO_BEGINNING_CODON = "CCG"
 PRINT_NEXT_CODON = "CGA"
-# NOT_DEFINED = "CGT"
+READ_ASCII_FILE_INTO_TAPE = "CGT"
 # NOT_DEFINED = "CGC"
 PRINT_NEXT_CODON_AS_ASCII = "CGG"
 # NOT_DEFINED = "GAA"
@@ -156,9 +157,10 @@ def read_tape(tape_list, debug_mode=False):
         logging.basicConfig(level=logging.ERROR)
     direction = 1  # Initially moving right
     stored_codon = []  # Initially empty memory
-    tape, current_cell = tape_list[0]
+    tape, current_cell = tape_list[0]  # Initially starts on first program of tape stack
+    logging.debug(tape_list)
     keep_going = True
-    codon = tape[current_cell]
+    codon = tape[current_cell]  # Sets first codon
     while keep_going:
         if codon == STOP_CODON:
             logging.debug("Stop Codon encountered")
@@ -255,10 +257,17 @@ def read_tape(tape_list, debug_mode=False):
             print(codon_to_ascii(tape[current_cell]))
         elif codon == STORE_USER_CODON_INPUT_CODON:
             logging.debug("Store user codon input Codon encountered")
-            stored_codon.append(input(""))
+            temp_store = input("")
+            temp_store_lis = [temp_store[i:i + 3] for i in range(0, len(temp_store), 3)]
+            stored_codon = stored_codon + temp_store_lis
+            del temp_store, temp_store_lis
         elif codon == STORE_USER_ASCII_INPUT_CODON:
             logging.debug("Store user ASCII input Codon encountered")
-            stored_codon.append(ascii_to_codon(input("")))
+            temp_store = []
+            for i in input(""):
+                temp_store.append(ascii_to_codon(i))
+            stored_codon = stored_codon + temp_store
+            del temp_store
         elif codon == ADD_NEXT_CODON_AND_STORE_CODON:
             logging.debug("Add Next Codon and Store Codon encountered")
             current_cell = move_head(current_cell, direction)
@@ -333,6 +342,7 @@ def read_tape(tape_list, debug_mode=False):
             temp_store = tape[current_cell]
             tape[current_cell] = stored_codon.pop()
             stored_codon.append(temp_store)
+            del temp_store
         elif codon == LOOP_START_CODON:
             logging.debug("Loop Start Codon encountered")
         elif codon == LOOP_END_CODON:
@@ -355,8 +365,35 @@ def read_tape(tape_list, debug_mode=False):
                 if tape[upper_tape.index(item)]:
                     if random.randint(0,1)==1:
                         tape[upper_tape.index(item)] = item
+        elif codon == REVERSE_ORDER_OF_MEMORY_CODON:
+            logging.debug("Reverse order of memory Codon encountered")
+            stored_codon.reverse()
+        elif codon == READ_FILE_INTO_TAPE_CODON:
+            logging.debug("Read file into tape Codon encountered")
+            filepath=""
+            for item in stored_codon:
+                filepath += codon_to_ascii(item)
+            file = Path(filepath)
+            if file.is_file():
+                with open(filepath, "r") as f:
+                    new_tape = create_tape(f.read())
+                    tape_list.append((new_tape, find_start_position_of_tape(new_tape)))
+            del filepath, file
+        elif codon == READ_ASCII_FILE_INTO_TAPE:
+            logging.debug("Read ASCII file into tape Codon encountered")
+            filepath=""
+            for item in stored_codon:
+                filepath += codon_to_ascii(item)
+            file = Path(filepath)
+            if file.is_file():
+                with open(filepath, "r") as f:
+                    new_tape_str = ""
+                    for char in f.read():
+                        new_tape_str += ascii_to_codon(char)
+                    new_tape = create_tape(new_tape_str)
+                    tape_list.append((new_tape, find_start_position_of_tape(new_tape)))
+            del filepath, file
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
-            current_cell = move_head(current_cell, -direction)
         codon = tape[current_cell]
