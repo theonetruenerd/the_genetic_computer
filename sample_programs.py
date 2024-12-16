@@ -1,6 +1,6 @@
 import the_genetic_computer
 
-hello_world = """AAACGGTTACGGTCCCGGTGACGGTGACGGTGGCGGAGACGGAAACGGGCGCGGTGGCGGGATCGGTGACGGTCATTT"""   # Prints hello world
+hello_world = """AAAATATTAATATCCATATGAATATGAATATGGATAAGAATAAAAATAGCGATATGGATAGATATATGAATATCACTCTTT"""   # Prints hello world
 adjacent_tape_printer = """AAAATACACGTCCTTTTT"""   # Prints the tape of whatever program is next in the tape stack
 truth_machine = """AAATCTTCACAATTTCACATGAATTTT"""   # Takes user input of 1 or 0, if 0 program halts, if 1 program prints 1s until user stops it
 cat_program = """AAATCTCTCTTT"""  # Takes user input and prints it

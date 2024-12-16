@@ -118,7 +118,7 @@ def ascii_to_codon(ascii_to_convert):
     index -= 32
     codon = ""
     for _ in range(3):
-        codon = codon + index_to_base[index%4]
+        codon = index_to_base[index%4] + codon
         index //= 4
     return codon
 
