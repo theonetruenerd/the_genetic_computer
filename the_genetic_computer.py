@@ -246,8 +246,6 @@ def read_tape(tape_list, debug_mode=False):
             logging.debug("Store next Codon encountered")
             current_cell = move_head(current_cell, direction)
             stored_codon.append(tape[current_cell])
-            codon = tape[current_cell]
-            continue
         elif codon == OVERWRITE_CODON:
             logging.debug("Overwrite Codon encountered")
             current_cell = move_head(current_cell, direction)
