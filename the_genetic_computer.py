@@ -57,7 +57,7 @@ COMPARE_CODON_SIZE_CODON = "GAC"
 REMOVE_LAST_STORED_CODON = "GAG"
 BEGIN_EQUATION_CODON = "GTA"
 END_EQUATION_CODON = "GTT"
-# NOT_DEFINED = "GTC"
+SAVE_TAPE_TO_MEMORY_CODON = "GTC"
 JUMP_TO_END_CODON = "GTG"
 # NOT_DEFINED = "GCA"
 # NOT_DEFINED = "GCT"
@@ -494,6 +494,10 @@ def read_tape(tape_list, debug_mode=False):
             for char in result:
                 new_tape.append(ascii_to_codon(char))
             tape_list.append((new_tape, 0))
+        elif codon == SAVE_TAPE_TO_MEMORY_CODON:
+            logging.debug("Save Tape to memory Codon encountered")
+            tape_to_store, _ = tape_list[int(codon_to_ascii(stored_codon.pop()))]
+            stored_codon += tape_to_store
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
