@@ -55,7 +55,7 @@ OUTPUT_TAPE_TO_FILE_CODON = "GAA"
 SAVE_MEMORY_AS_TAPE_CODON = "GAT"
 MERGE_NEXT_TWO_CODONS = "GAC"
 REMOVE_LAST_STORED_CODON = "GAG"
-# NOT_DEFINED = "GTA"
+SPLIT_CODON = "GTA"
 # NOT_DEFINED = "GTT"
 # NOT_DEFINED = "GTC"
 JUMP_TO_END_CODON = "GTG"
@@ -423,10 +423,19 @@ def read_tape(tape_list, debug_mode=False):
         elif codon == MERGE_NEXT_TWO_CODONS:
             logging.debug("Merge next two codons Codon encountered")
             temp_store = ""
-            temp_store += tape.pop(current_cell + 1)
-            temp_store += tape.pop(current_cell + 2)
-            tape.insert(temp_store)
+            temp_store += tape.pop(current_cell + direction)
+            temp_store += tape.pop(current_cell + direction*2)
+            tape.insert(temp_store, current_cell + direction)
             del temp_store
+        elif codon == SPLIT_CODON:
+            logging.debug("Split codon Codon encountered")
+            if len(tape[current_cell+direction]) > 3:
+                temp_store = tape[current_cell+direction]
+                temp_store_lis = [temp_store[i:i + 3] for i in range(0, len(temp_store), 3)]
+                for item in temp_store_lis:
+                    tape.insert(item, current_cell+direction)
+                    current_cell = move_head(current_cell, direction)
+                del temp_store_lis, temp_store
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
