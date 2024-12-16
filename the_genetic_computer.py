@@ -11,8 +11,8 @@ STORE_NEXT_CODON = "ATA"
 COMPLEMENT_CODON = "ATT"
 OVERWRITE_CODON = "ATC"
 PRINT_STORED_CODON_AS_ASCII = "ATG"
-# NOT_DEFINED = "ACA"
-# NOT_DEFINED = "ACT"
+DOUBLE_SPEED_CODON = "ACA"
+HALF_SPEED_CODON = "ACT"
 INSERT_CODON_CODON = "ACC"
 DELETE_CODON_CODON = "ACG"
 SHUFFLE_BASES_CODON = "AGA"
@@ -94,10 +94,7 @@ def find_start_position_of_tape(tape):
             return index
 
 def move_head(current_cell, direction):
-    if direction == -1:
-        current_cell -= 1
-    elif direction == 1:
-        current_cell += 1
+    current_cell += direction
     return current_cell
 
 def shuffle_codon(codon):
@@ -420,6 +417,13 @@ def read_tape(tape_list, debug_mode=False):
         elif codon == SAVE_MEMORY_AS_TAPE_CODON:
             logging.debug("Save Memory Codon encountered")
             tape_list.append((stored_codon, find_start_position_of_tape(stored_codon)))
+        elif codon == DOUBLE_SPEED_CODON:
+            logging.debug("Double speed Codon encountered")
+            direction *= 2
+        elif codon == HALF_SPEED_CODON:
+            logging.debug("Half speed Codon encountered")
+            if abs(direction) > 1:
+                direction /= 2
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
