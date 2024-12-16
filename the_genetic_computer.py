@@ -123,7 +123,7 @@ def ascii_to_codon(ascii_to_convert):
     return codon
 
 def eval_expression(equation):
-    valid_tape = r'^[0123456789+-*/^()]+$'
+    valid_tape = r'^[0123456789\*\+\-\^/+]+$'
     if re.fullmatch(valid_tape, equation):
         equation_chars = list(equation)
         equation_chars_concat = ""
@@ -131,44 +131,52 @@ def eval_expression(equation):
         for index, char in enumerate(equation_chars):
             if char in ["0","1","2","3","4","5","6","7","8","9"]:
                 equation_chars_concat += char
+                logging.debug(equation_chars_concat)
             else:
                 updated_equation_list.append(int(equation_chars_concat))
                 updated_equation_list.append(char)
                 equation_chars_concat = ""
+        if equation_chars_concat != "":
+            updated_equation_list.append(int(equation_chars_concat))
         while len(updated_equation_list) > 1:
-            for index, char in updated_equation_list:
-                if char == "^":
-                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
-                        updated_equation_list[index] = updated_equation_list[index-1] ** updated_equation_list[index+1]
-                        updated_equation_list.pop(index-1)
-                        updated_equation_list.pop(index+1)
-                elif char == "*":
-                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
-                        updated_equation_list[index] = updated_equation_list[index-1] * updated_equation_list[index+1]
-                        updated_equation_list.pop(index-1)
-                        updated_equation_list.pop(index+1)
-                elif char == "/":
-                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
-                        updated_equation_list[index] = updated_equation_list[index-1] / updated_equation_list[index+1]
-                        updated_equation_list.pop(index-1)
-                        updated_equation_list.pop(index+1)
-                elif char == "+":
-                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
-                        updated_equation_list[index] = updated_equation_list[index-1] + updated_equation_list[index+1]
-                        updated_equation_list.pop(index-1)
-                        updated_equation_list.pop(index+1)
-                elif char == "-":
-                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
-                        updated_equation_list[index] = updated_equation_list[index-1] - updated_equation_list[index+1]
-                        updated_equation_list.pop(index-1)
-                        updated_equation_list.pop(index+1)
-                elif char == "(":
-                    if isinstance(updated_equation_list[index+1], int) and updated_equation_list[index+2] == ")":
-                        updated_equation_list.pop(index)
-                        updated_equation_list.pop(index+2)
-        return updated_equation_list[0]
-
-
+            logging.debug(updated_equation_list)
+            # for char in updated_equation_list:
+            #     index = updated_equation_list.index(char)
+            #     logging.debug(index)
+                # if char == "^":
+                #     if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                #         updated_equation_list[index] = updated_equation_list[index-1] ** updated_equation_list[index+1]
+                #         updated_equation_list.pop(index+1)
+                #         updated_equation_list.pop(index-1)
+                # elif char == "*":
+                #     if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                #         updated_equation_list[index] = updated_equation_list[index-1] * updated_equation_list[index+1]
+                #         updated_equation_list.pop(index+1)
+                #         updated_equation_list.pop(index-1)
+                # elif char == "/":
+                #     if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                #         updated_equation_list[index] = updated_equation_list[index-1] / updated_equation_list[index+1]
+                #         updated_equation_list.pop(index+1)
+                #         updated_equation_list.pop(index-1)
+                # elif char == "+":
+                #     if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                #         updated_equation_list[index] = updated_equation_list[index-1] + updated_equation_list[index+1]
+                #         logging.debug(updated_equation_list)
+                #         updated_equation_list.pop(index+1)
+                #         updated_equation_list.pop(index-1)
+                # elif char == "-":
+                #     if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                #         updated_equation_list[index] = updated_equation_list[index-1] - updated_equation_list[index+1]
+                #         updated_equation_list.pop(index+1)
+                #         updated_equation_list.pop(index-1)
+                # elif char == "(":
+                #     if isinstance(updated_equation_list[index+1], int) and updated_equation_list[index+2] == ")":
+                #         updated_equation_list.pop(index)
+                #         updated_equation_list.pop(index+2)
+        logging.debug(f"Result: {updated_equation_list[0]}")
+        return str(updated_equation_list[0])
+    else:
+        raise ValueError(f"Ascii string of expression contains invalid characters")
 
 def add_next_codon(current_codon,codon_to_add):
     value = int(codon_to_ascii(current_codon))
@@ -374,7 +382,7 @@ def read_tape(tape_list, debug_mode=False):
             random.shuffle(tape)
         elif codon == PRINT_TAPE_CODON:
             logging.debug("Print Tape Codon encountered")
-            print(tape)
+            print(tape_list[int(codon_to_ascii(stored_codon.pop()))])
         elif codon == SWAP_STORED_AND_TAPE_CODON:
             logging.debug("Swap Tape Codon encountered")
             current_cell = move_head(current_cell, direction)
@@ -475,12 +483,14 @@ def read_tape(tape_list, debug_mode=False):
         elif codon == BEGIN_EQUATION_CODON:
             logging.debug("Begin equation Codon encountered")
             equation = ""
+            current_cell = move_head(current_cell, direction)
             while tape[current_cell] != END_EQUATION_CODON:
                 equation += codon_to_ascii(tape[current_cell])
                 current_cell = move_head(current_cell,direction)
             logging.debug("End equation Codon encountered")
             logging.debug(equation)
             result = eval_expression(equation)
+            new_tape = []
             for char in result:
                 new_tape.append(ascii_to_codon(char))
             tape_list.append((new_tape, 0))
