@@ -53,7 +53,7 @@ OUTPUT_TAPE_TO_FILE_ASCII_CODON = "CGC"
 PRINT_NEXT_CODON_AS_ASCII = "CGG"
 OUTPUT_TAPE_TO_FILE_CODON = "GAA"
 SAVE_MEMORY_AS_TAPE_CODON = "GAT"
-# NOT_DEFINED = "GAC"
+COMPARE_CODON_SIZE_CODON = "GAC"
 REMOVE_LAST_STORED_CODON = "GAG"
 # NOT_DEFINED = "GTA"
 # NOT_DEFINED = "GTT"
@@ -420,6 +420,11 @@ def read_tape(tape_list, debug_mode=False):
             logging.debug("Half speed Codon encountered")
             if abs(direction) > 1:
                 direction /= 2
+        elif codon == COMPARE_CODON_SIZE_CODON:
+            logging.debug("Compare size Codon encountered")
+            if stored_codon.pop() > tape[current_cell]:
+                codon = stored_codon.pop()
+                continue
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
