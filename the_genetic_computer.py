@@ -11,8 +11,8 @@ STORE_NEXT_CODON = "ATA"
 COMPLEMENT_CODON = "ATT"
 OVERWRITE_CODON = "ATC"
 PRINT_STORED_CODON_AS_ASCII = "ATG"
-INSERT_BASE_CODON = "ACA"
-DELETE_BASE_CODON = "ACT"
+# NOT_DEFINED = "ACA"
+# NOT_DEFINED = "ACT"
 INSERT_CODON_CODON = "ACC"
 DELETE_CODON_CODON = "ACG"
 SHUFFLE_BASES_CODON = "AGA"
@@ -49,10 +49,10 @@ PRINT_STORED_CODON = "CCC"
 JUMP_TO_BEGINNING_CODON = "CCG"
 PRINT_NEXT_CODON = "CGA"
 READ_ASCII_FILE_INTO_TAPE = "CGT"
-# NOT_DEFINED = "CGC"
+OUTPUT_TAPE_TO_FILE_ASCII_CODON = "CGC"
 PRINT_NEXT_CODON_AS_ASCII = "CGG"
-# NOT_DEFINED = "GAA"
-# NOT_DEFINED = "GAT"
+OUTPUT_TAPE_TO_FILE_CODON = "GAA"
+SAVE_MEMORY_AS_TAPE_CODON = "GAT"
 # NOT_DEFINED = "GAC"
 REMOVE_LAST_STORED_CODON = "GAG"
 # NOT_DEFINED = "GTA"
@@ -110,7 +110,6 @@ def invert_codon(codon):
 
     return ''.join(complement[base] for base in codon)
 
-
 def codon_to_ascii(codon):
     base_to_index = {'A': 0, 'C': 1, 'T': 2, 'G': 3}
 
@@ -164,7 +163,7 @@ def read_tape(tape_list, debug_mode=False):
     while keep_going:
         if codon == STOP_CODON:
             logging.debug("Stop Codon encountered")
-            keep_going = False
+            break
         elif codon == LOAD_TAPE_CODON:
             logging.debug("Load Tape Encountered")
             new_tape = ''.join(stored_codon)
@@ -393,6 +392,34 @@ def read_tape(tape_list, debug_mode=False):
                     new_tape = create_tape(new_tape_str)
                     tape_list.append((new_tape, find_start_position_of_tape(new_tape)))
             del filepath, file
+        elif codon == OUTPUT_TAPE_TO_FILE_CODON:
+            logging.debug("Output Tape Codon encountered")
+            filepath = ""
+            for item in stored_codon:
+                filepath += codon_to_ascii(item)
+            file = Path(filepath)
+            if file.is_file():
+                with open(filepath, "w") as f:
+                    f.write(tape)
+            else:
+                raise FileNotFoundError(f"File not found: {filepath}")
+            del filepath, file
+        elif codon == OUTPUT_TAPE_TO_FILE_ASCII_CODON:
+            logging.debug("Output Tape ASCII Codon encountered")
+            filepath = ""
+            for item in stored_codon:
+                filepath += codon_to_ascii(item)
+            file = Path(filepath)
+            if file.is_file():
+                with open(filepath, "w") as f:
+                    for item in tape:
+                        f.write(codon_to_ascii(item))
+            else:
+                raise FileNotFoundError(f"File not found: {filepath}")
+            del filepath, file
+        elif codon == SAVE_MEMORY_AS_TAPE_CODON:
+            logging.debug("Save Memory Codon encountered")
+            tape_list.append((stored_codon, find_start_position_of_tape(stored_codon)))
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
