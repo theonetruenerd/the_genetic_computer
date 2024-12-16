@@ -53,7 +53,7 @@ OUTPUT_TAPE_TO_FILE_ASCII_CODON = "CGC"
 PRINT_NEXT_CODON_AS_ASCII = "CGG"
 OUTPUT_TAPE_TO_FILE_CODON = "GAA"
 SAVE_MEMORY_AS_TAPE_CODON = "GAT"
-# NOT_DEFINED = "GAC"
+MERGE_NEXT_TWO_CODONS = "GAC"
 REMOVE_LAST_STORED_CODON = "GAG"
 # NOT_DEFINED = "GTA"
 # NOT_DEFINED = "GTT"
@@ -109,29 +109,25 @@ def invert_codon(codon):
 
 def codon_to_ascii(codon):
     base_to_index = {'A': 0, 'C': 1, 'T': 2, 'G': 3}
-
-    index = base_to_index[codon[0]] * 16 + base_to_index[codon[1]] * 4 + base_to_index[codon[2]]
-    index += 32
-
+    index = 0
+    for base in codon:
+        index += base_to_index[base] * 4^codon.index(base)
     return chr(index)
 
 def ascii_to_codon(ascii_to_convert):
     index_to_base = ['A','C','T','G']
-    index = ord(ascii_to_convert) - 32
+    index = ord(ascii_to_convert)
     codon = ""
-    for _ in range(3):
-        codon = index_to_base[index%4] + codon
+    while index >= 0:
+        codon = codon + index_to_base[index%4]
         index //= 4
     return codon
 
 def add_next_codon(current_codon,codon_to_add):
     value = int(codon_to_ascii(current_codon))
     value_being_added_to = int(codon_to_ascii(codon_to_add))
-    value -= 48
-    value_being_added_to -= 48
     new_value = value + value_being_added_to
-    new_value += 96
-    print(new_value)
+    logging.debug(f"{value}, {value_being_added_to}, {new_value}")
     return ascii_to_codon(str(new_value))
 
 def combine_codons(codon_one, codon_two):
@@ -424,6 +420,13 @@ def read_tape(tape_list, debug_mode=False):
             logging.debug("Half speed Codon encountered")
             if abs(direction) > 1:
                 direction /= 2
+        elif codon == MERGE_NEXT_TWO_CODONS:
+            logging.debug("Merge next two codons Codon encountered")
+            temp_store = ""
+            temp_store += tape.pop(current_cell + 1)
+            temp_store += tape.pop(current_cell + 2)
+            tape.insert(temp_store)
+            del temp_store
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
