@@ -55,8 +55,8 @@ OUTPUT_TAPE_TO_FILE_CODON = "GAA"
 SAVE_MEMORY_AS_TAPE_CODON = "GAT"
 COMPARE_CODON_SIZE_CODON = "GAC"
 REMOVE_LAST_STORED_CODON = "GAG"
-# NOT_DEFINED = "GTA"
-# NOT_DEFINED = "GTT"
+BEGIN_EQUATION_CODON = "GTA"
+END_EQUATION_CODON = "GTT"
 # NOT_DEFINED = "GTC"
 JUMP_TO_END_CODON = "GTG"
 # NOT_DEFINED = "GCA"
@@ -104,7 +104,6 @@ def shuffle_codon(codon):
 
 def invert_codon(codon):
     complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
-
     return ''.join(complement[base] for base in codon)
 
 def codon_to_ascii(codon):
@@ -122,6 +121,54 @@ def ascii_to_codon(ascii_to_convert):
         codon = codon + index_to_base[index%4]
         index //= 4
     return codon
+
+def eval_expression(equation):
+    valid_tape = r'^[0123456789+-*/^()]+$'
+    if re.fullmatch(valid_tape, equation):
+        equation_chars = list(equation)
+        equation_chars_concat = ""
+        updated_equation_list = []
+        for index, char in enumerate(equation_chars):
+            if char in ["0","1","2","3","4","5","6","7","8","9"]:
+                equation_chars_concat += char
+            else:
+                updated_equation_list.append(int(equation_chars_concat))
+                updated_equation_list.append(char)
+                equation_chars_concat = ""
+        while len(updated_equation_list) > 1:
+            for index, char in updated_equation_list:
+                if char == "^":
+                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                        updated_equation_list[index] = updated_equation_list[index-1] ** updated_equation_list[index+1]
+                        updated_equation_list.pop(index-1)
+                        updated_equation_list.pop(index+1)
+                elif char == "*":
+                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                        updated_equation_list[index] = updated_equation_list[index-1] * updated_equation_list[index+1]
+                        updated_equation_list.pop(index-1)
+                        updated_equation_list.pop(index+1)
+                elif char == "/":
+                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                        updated_equation_list[index] = updated_equation_list[index-1] / updated_equation_list[index+1]
+                        updated_equation_list.pop(index-1)
+                        updated_equation_list.pop(index+1)
+                elif char == "+":
+                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                        updated_equation_list[index] = updated_equation_list[index-1] + updated_equation_list[index+1]
+                        updated_equation_list.pop(index-1)
+                        updated_equation_list.pop(index+1)
+                elif char == "-":
+                    if isinstance(updated_equation_list[index-1], int) and isinstance(updated_equation_list[index+1], int):
+                        updated_equation_list[index] = updated_equation_list[index-1] - updated_equation_list[index+1]
+                        updated_equation_list.pop(index-1)
+                        updated_equation_list.pop(index+1)
+                elif char == "(":
+                    if isinstance(updated_equation_list[index+1], int) and updated_equation_list[index+2] == ")":
+                        updated_equation_list.pop(index)
+                        updated_equation_list.pop(index+2)
+        return updated_equation_list[0]
+
+
 
 def add_next_codon(current_codon,codon_to_add):
     value = int(codon_to_ascii(current_codon))
@@ -425,6 +472,18 @@ def read_tape(tape_list, debug_mode=False):
             if stored_codon.pop() > tape[current_cell]:
                 codon = stored_codon.pop()
                 continue
+        elif codon == BEGIN_EQUATION_CODON:
+            logging.debug("Begin equation Codon encountered")
+            equation = ""
+            while tape[current_cell] != END_EQUATION_CODON:
+                equation += codon_to_ascii(tape[current_cell])
+                current_cell = move_head(current_cell,direction)
+            logging.debug("End equation Codon encountered")
+            logging.debug(equation)
+            result = eval_expression(equation)
+            for char in result:
+                new_tape.append(ascii_to_codon(char))
+            tape_list.append((new_tape, 0))
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
