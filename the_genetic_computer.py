@@ -109,16 +109,16 @@ def invert_codon(codon):
 
 def codon_to_ascii(codon):
     base_to_index = {'A': 0, 'C': 1, 'T': 2, 'G': 3}
-    index = 0
-    for base in codon:
-        index += base_to_index[base] * 4^codon.index(base)
+    index = base_to_index[codon[0]] * 16 + base_to_index[codon[1]] * 4 + base_to_index[codon[2]]
+    index += 32
     return chr(index)
 
 def ascii_to_codon(ascii_to_convert):
     index_to_base = ['A','C','T','G']
     index = ord(ascii_to_convert)
+    index -= 32
     codon = ""
-    while index >= 0:
+    for _ in range(3):
         codon = codon + index_to_base[index%4]
         index //= 4
     return codon
