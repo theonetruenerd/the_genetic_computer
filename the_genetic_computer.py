@@ -401,8 +401,11 @@ def read_tape(tape_list, debug_mode=False):
             logging.debug("Print Memory Codon encountered")
             print(stored_codon)
         elif codon == PRINT_MEMORY_AS_ASCII_CODON:
+            temp_store = ""
             for item in stored_codon:
-                print(codon_to_ascii(item))
+                temp_store += codon_to_ascii(item)
+            print(temp_store)
+            del temp_store
         elif codon == TAPE_MEIOSIS_CODON:
             logging.debug("Tape Meiosis Codon encountered")
             (upper_tape, upper_tape_current_cell) = tape_list[tape_list.index((tape, current_cell))+1]
