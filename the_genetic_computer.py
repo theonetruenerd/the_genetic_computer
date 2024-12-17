@@ -20,7 +20,7 @@ CHANGE_DIRECTION_TO_RIGHT_CODON = "AGT"
 CHANGE_DIRECTION_TO_LEFT_CODON = "AGC"
 TOGGLE_DIRECTION_CODON = "AGG"
 COMBINE_CODONS = "TAA"
-ADD_NEXT_CODON_AND_STORE_CODON = "TAT"
+# NOT DEFINED = "TAT"
 MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII = "TAC"
 LOAD_TAPE_CODON = "TAG"
 CLEAR_MEMORY_CODON = "TTA"
@@ -61,6 +61,7 @@ SAVE_TAPE_TO_MEMORY_CODON = "GTC"
 JUMP_TO_END_CODON = "GTG"
 BITWISE_NOT_CODON = "GCA"
 BITWISE_AND_CODON = "GCT"
+# NOT DEFINED = "GCC"
 IF_CODON = "GCG"
 BITWISE_OR_CODON = "GGA"
 BITWISE_XOR_CODON = "GGT"
@@ -178,17 +179,11 @@ def eval_expression(equation):
     else:
         raise ValueError(f"Ascii string of expression contains invalid characters")
 
-def add_next_codon(current_codon,codon_to_add):
-    value = int(codon_to_ascii(current_codon))
-    value_being_added_to = int(codon_to_ascii(codon_to_add))
-    new_value = value + value_being_added_to
-    logging.debug(f"{value}, {value_being_added_to}, {new_value}")
-    return ascii_to_codon(str(new_value))
-
 def combine_codons(codon_one, codon_two):
     value_one = int(codon_to_ascii(codon_one))
     value_two = int(codon_to_ascii(codon_two))
     combined_value = value_one + value_two
+    logging.debug(f"{value_one}, {value_two}, {combined_value}")
     return ascii_to_codon(str(combined_value))
 
 def codon_to_bits(codon):
@@ -359,12 +354,6 @@ def read_tape(tape_list, debug_mode=False):
                 temp_store.append(ascii_to_codon(i))
             stored_codon = stored_codon + temp_store
             del temp_store
-        elif codon == ADD_NEXT_CODON_AND_STORE_CODON:
-            logging.debug("Add Next Codon and Store Codon encountered")
-            current_cell = move_head(current_cell, direction)
-            stored_codon.append(add_next_codon(stored_codon.pop(), tape[current_cell]))
-            codon = tape[current_cell]
-            continue
         elif codon == COMBINE_CODONS:
             logging.debug("Combine Codon encountered")
             current_cell = move_head(current_cell, direction)
