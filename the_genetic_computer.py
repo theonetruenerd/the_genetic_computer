@@ -20,7 +20,7 @@ CHANGE_DIRECTION_TO_RIGHT_CODON = "AGT"
 CHANGE_DIRECTION_TO_LEFT_CODON = "AGC"
 TOGGLE_DIRECTION_CODON = "AGG"
 COMBINE_CODONS = "TAA"
-# NOT DEFINED = "TAT"
+SORT_MEMORY_BY_ASCII_CODON = "TAT"
 MOVE_EQUAL_TO_LAST_STORED_CODON_ASCII = "TAC"
 LOAD_TAPE_CODON = "TAG"
 CLEAR_MEMORY_CODON = "TTA"
@@ -219,6 +219,18 @@ def bitwise_and(codon1, codon2):
     codon2_bits = codon_to_bits(codon2)
     new_codon_bits = codon1_bits & codon2_bits
     return bits_to_codon(new_codon_bits)
+
+def convert_tape_to_ascii(tape):
+    new_tape = []
+    for item in tape:
+        new_tape.append(codon_to_ascii(item))
+    return new_tape
+
+def convert_ascii_to_tape(ascii_list):
+    new_tape = []
+    for item in ascii_list:
+        new_tape.append(ascii_to_codon(item))
+    return new_tape
 
 def bitwise_or(codon1, codon2):
     codon1_bits = codon_to_bits(codon1)
@@ -564,6 +576,11 @@ def read_tape(tape_list, debug_mode=False):
             top_tape.append(codon)
             tape_list.append((top_tape, top_current_cell))
             del top_tape, top_current_cell
+        elif codon == SORT_MEMORY_BY_ASCII_CODON:
+            new_tape = convert_tape_to_ascii(stored_codon)
+            new_tape.sort()
+            stored_codon = convert_ascii_to_tape(new_tape)
+            del new_tape
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
