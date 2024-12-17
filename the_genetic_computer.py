@@ -59,12 +59,12 @@ BEGIN_EQUATION_CODON = "GTA"
 END_EQUATION_CODON = "GTT"
 SAVE_TAPE_TO_MEMORY_CODON = "GTC"
 JUMP_TO_END_CODON = "GTG"
-# NOT_DEFINED = "GCA"
-# NOT_DEFINED = "GCT"
+BITWISE_NOT_CODON = "GCA"
+BITWISE_AND_CODON = "GCT"
 IF_CODON = "GCG"
-# NOT_DEFINED = "GGA"
-# NOT_DEFINED = "GGT"
-# NOT_DEFINED = "GGC"
+BITWISE_OR_CODON = "GGA"
+BITWISE_XOR_CODON = "GGT"
+APPEND_STORED_CODON_TO_TOP_OF_TAPE_STACK_CODON = "GGC"
 RETURN_TO_START_CODON = "GGG"
 
 def create_tape(program):
@@ -190,6 +190,52 @@ def combine_codons(codon_one, codon_two):
     value_two = int(codon_to_ascii(codon_two))
     combined_value = value_one + value_two
     return ascii_to_codon(str(combined_value))
+
+def codon_to_bits(codon):
+    base_to_bits = {'A':'00',
+                    'C':'01',
+                    'T':'10',
+                    'G':'11'}
+    bits = ''.join(base_to_bits[base] for base in codon)
+    return int(bits, 2)
+
+def bits_to_codon(bits):
+    bits_to_base = {
+        '00': 'A',
+        '01': 'C',
+        '10': 'T',
+        '11': 'G'
+    }
+    bits = str(bits[2:])
+    codons = []
+    for i in range(0, len(bits), 2):
+        base_bits = bits[i:i + 2]
+        codons.append(bits_to_base[base_bits])
+
+    return ''.join(codons)
+
+def bitwise_not(codon):
+    codon_bits = codon_to_bits(codon)
+    new_codon_bits = ~codon_bits
+    return bits_to_codon(new_codon_bits)
+
+def bitwise_and(codon1, codon2):
+    codon1_bits = codon_to_bits(codon1)
+    codon2_bits = codon_to_bits(codon2)
+    new_codon_bits = codon1_bits & codon2_bits
+    return bits_to_codon(new_codon_bits)
+
+def bitwise_or(codon1, codon2):
+    codon1_bits = codon_to_bits(codon1)
+    codon2_bits = codon_to_bits(codon2)
+    new_codon_bits = codon1_bits | codon2_bits
+    return bits_to_codon(new_codon_bits)
+
+def bitwise_xor(codon1, codon2):
+    codon1_bits = codon_to_bits(codon1)
+    codon2_bits = codon_to_bits(codon2)
+    new_codon_bits = codon1_bits ^ codon2_bits
+    return bits_to_codon(new_codon_bits)
 
 def initialise_tape_list(tapes):
     tape_list = []
@@ -499,6 +545,36 @@ def read_tape(tape_list, debug_mode=False):
             logging.debug("Save Tape to memory Codon encountered")
             tape_to_store, _ = tape_list[int(codon_to_ascii(stored_codon.pop()))]
             stored_codon += tape_to_store
+        elif codon == BITWISE_OR_CODON:
+            logging.debug("Bitwise or Codon encountered")
+            codon_1 = stored_codon.pop()
+            codon_2 = stored_codon.pop()
+            stored_codon.append(bitwise_or(codon_1, codon_2))
+            del codon_1, codon_2
+        elif codon == BITWISE_XOR_CODON:
+            logging.debug("Bitwise xor Codon encountered")
+            codon_1 = stored_codon.pop()
+            codon_2 = stored_codon.pop()
+            stored_codon.append(bitwise_xor(codon_1, codon_2))
+            del codon_1, codon_2
+        elif codon == BITWISE_AND_CODON:
+            logging.debug("Bitwise and Codon encountered")
+            codon_1 = stored_codon.pop()
+            codon_2 = stored_codon.pop()
+            stored_codon.append(bitwise_and(codon_1, codon_2))
+            del codon_1, codon_2
+        elif codon == BITWISE_NOT_CODON:
+            logging.debug("Bitwise not Codon encountered")
+            codon = stored_codon.pop()
+            stored_codon.append(bitwise_not(codon))
+            del codon
+        elif codon == APPEND_STORED_CODON_TO_TOP_OF_TAPE_STACK_CODON:
+            logging.debug("Append stored codon to top of Tape Stack Codon encountered")
+            codon = stored_codon.pop()
+            top_tape, top_current_cell = tape_list.pop()
+            top_tape.append(codon)
+            tape_list.append((top_tape, top_current_cell))
+            del top_tape, top_current_cell
         current_cell = move_head(current_cell, direction)
         if current_cell < 0 or current_cell >= len(tape):
             logging.ERROR("Tape head moved out of bounds.")
